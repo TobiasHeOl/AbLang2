@@ -47,7 +47,7 @@ def get_max_alignment():
 
     sortlist = [[("<", "")]]
     for num in range(1, 128+1):
-        if num==112:
+        if num in [33,61,112]:
             for char in string.ascii_uppercase[::-1]:
                 sortlist.append([(num, char)])
 
