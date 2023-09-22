@@ -38,14 +38,14 @@ class pretrained(AbEncoding, AbRestore, AbAlignment):
         if not mode in ['rescoding', 'seqcoding', 'restore', 'likelihood']:
             raise SyntaxError("Given mode doesn't exist.")
         
-        seqs, chain = prepare_sequences(seqs, fragmented = False) 
+        seqs, chain = prepare_sequences(seqs, fragmented = fragmented) 
         if align:
-            numbered_seqs, seqs, number_alignment = self.number_sequences(seqs, chain = chain)
+            numbered_seqs, seqs, number_alignment = self.number_sequences(seqs, chain = chain, fragmented = fragmented)
         
         subset_list = []
         for subset in [seqs[x:x+chunk_size] for x in range(0, len(seqs), chunk_size)]:
             subset_list.append(getattr(self, mode)(subset, align, chain = chain))
-            
+
         return self.reformat_subsets(
             subset_list, 
             mode = mode, 

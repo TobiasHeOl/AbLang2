@@ -72,7 +72,7 @@ def paired_msa_numbering(ab_seqs, fragmented = False, n_jobs = 10):
     numbered_seqs_light, seqs_light, number_alignment_light = unpaired_msa_numbering(
         [i[1] for i in tmp_seqs], 'L', fragmented = fragmented, n_jobs = n_jobs
     )
-
+    
     number_alignment = pd.concat([
         number_alignment_heavy, 
         pd.DataFrame([[("|",""), "|"]]), 
@@ -93,8 +93,7 @@ def unpaired_msa_numbering(seqs, chain = 'H', n_jobs = 10, fragmented = False):
     number_alignment = get_number_alignment(numbered_seqs)
     number_alignment[1] = chain   
     
-    seqs = [''.join([i[2] for i in numbered_seq]).replace('-','') for numbered_seq in numbered_seqs]
-    
+    seqs = [''.join([i[2] for i in numbered_seq]).replace('-','') for numbered_seq in numbered_seqs]    
     return numbered_seqs, seqs, number_alignment
 
 
@@ -114,12 +113,13 @@ def number_with_anarci(seqs, chain = 'H', fragmented = False, n_jobs = 1):
     for onarci in anarci_out[1]:
         numbered_seq = []
         for i in onarci[0][0]:
-            numbered_seq.append((i[0], chain, i[1]))
+            if i[1] != '-':
+                numbered_seq.append((i[0], chain, i[1]))
             
         if fragmented:
-            numbered_seqs.append([(("<",""), chain, "<")] + numbered_seq + [((">",""), chain, ">")])
+            numbered_seqs.append(numbered_seq) 
         else:
-            numbered_seqs.append(numbered_seq)
+            numbered_seqs.append([(("<",""), chain, "<")] + numbered_seq + [((">",""), chain, ">")])
     
     return numbered_seqs
 

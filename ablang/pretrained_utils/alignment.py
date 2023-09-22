@@ -12,11 +12,13 @@ class AbAlignment:
         self.device = device
         self.ncpu = ncpu
         
-    def number_sequences(self, seqs, chain = 'H'):
+    def number_sequences(self, seqs, chain = 'H', fragmented = False):
         if chain == 'HL':
-            numbered_seqs, seqs, number_alignment = paired_msa_numbering(seqs, self.ncpu)
+            numbered_seqs, seqs, number_alignment = paired_msa_numbering(seqs, fragmented = fragmented, n_jobs = self.ncpu)
         else:
-            numbered_seqs, seqs, number_alignment = unpaired_msa_numbering(seqs, chain = chain, ncpus = self.ncpu)
+            numbered_seqs, seqs, number_alignment = unpaired_msa_numbering(
+                seqs, chain = chain, ncpus = self.ncpu, fragmented = fragmented
+            )
         
         return numbered_seqs, seqs, number_alignment
     
@@ -52,7 +54,7 @@ class AbAlignment:
                     seqs[num*len(subset):(num+1)*len(subset)], 
                     number_alignment
                 ) for num, subset in enumerate(subset_list)
-            ]
+            ]            
             return aligned_results(
                 aligned_embeds=np.concatenate(subset_list),
                 number_alignment=number_alignment.apply(lambda x: '{}{}'.format(*x[0]), axis=1).values

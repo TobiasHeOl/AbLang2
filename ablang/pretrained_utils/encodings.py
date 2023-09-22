@@ -55,7 +55,7 @@ class AbEncoding:
         
         if align: return logits
             
-        else: return 
+        else: return [res_to_list(state, seq) for state, seq in zip(logits, seqs)]
         
     def probability(self, seqs, align=False, chain = 'H'):
         """
