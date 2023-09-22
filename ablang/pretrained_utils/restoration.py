@@ -5,16 +5,16 @@ from .extra_utils import res_to_seq, get_sequences_from_anarci
 
 
 class AbRestore:
-    
-    def __init__(self, model, tokenizer, spread, device = 'cpu', ncpu = 1):
-        
-        self.AbLang = model
-        self.tokenizer = tokenizer
+    def __init__(self, spread = 11, device = 'cpu', ncpu = 1):
         self.spread = spread
         self.device = device
         self.ncpu = ncpu
+        
+    def _initiate_abrestore(self, model, tokenizer):
+        self.AbLang = model
+        self.tokenizer = tokenizer
 
-    def restore(self, seqs, align=False, chain = 'H'):
+    def restore(self, seqs, align = False, chain = 'H'):
         """
         Restore sequences
         """
@@ -64,13 +64,19 @@ class AbRestore:
             allowed_species=['human', 'mouse'],
         )
         
-        anarci_data = pd.DataFrame([str(anarci[0][0]) if anarci else 'ANARCI_error' for anarci in anarci_out[1]], columns=['anarci']).astype('<U90')
+        anarci_data = pd.DataFrame(
+            [str(anarci[0][0]) if anarci else 'ANARCI_error' for anarci in anarci_out[1]], 
+            columns=['anarci']
+        ).astype('<U90')
         
         max_position = 128 if chain == 'H' else 127
         
-        seqs = anarci_data.apply(lambda x: get_sequences_from_anarci(
-            x.anarci, 
-            max_position, 
-            self.spread), axis=1, result_type='expand').to_numpy().reshape(-1)
+        seqs = anarci_data.apply(
+            lambda x: get_sequences_from_anarci(
+                x.anarci, 
+                max_position, 
+                self.spread
+            ), axis=1, result_type='expand'
+        ).to_numpy().reshape(-1)
          
         return seqs

@@ -16,67 +16,55 @@ class AbEncoding:
         self.AbLang = model
         self.tokenizer = tokenizer
         
-    def encode_sequences(self, seqs):
+    def _encode_sequences(self, seqs):
         tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)
         with torch.no_grad():
             return self.AbLang.AbRep(tokens).last_hidden_states.numpy()
         
+    def _predict_logits(self, seqs):
+        tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)
+        with torch.no_grad():
+            return self.AbLang(tokens)
+
     def seqcoding(self, seqs, align=False, chain = 'H'):
         """
         Sequence specific representations
         """
         
-        residue_states = self.encode_sequences(seqs)
+        encodings = self._encode_sequences(seqs)
         
         lens = np.vectorize(len)(seqs)
-        lens = np.tile(lens.reshape(-1,1,1), (residue_states.shape[2], 1))
-        seqcodings = np.apply_along_axis(res_to_seq, 2, np.c_[np.swapaxes(residue_states,1,2), lens])
-        
-        del lens
-        del residue_states
-        
-        return seqcodings
+        lens = np.tile(lens.reshape(-1,1,1), (encodings.shape[2], 1))
+        return np.apply_along_axis(res_to_seq, 2, np.c_[np.swapaxes(encodings,1,2), lens])
         
     def rescoding(self, seqs, align=False, chain = 'H'):
         """
         Residue specific representations.
         """
+        encodings = self._encode_sequences(seqs)
            
-        if not align:
-            residue_states = self.encode_sequences(seqs)
-            residue_output = [res_to_list(state, seq) for state, seq in zip(residue_states, seqs)]
-            return residue_output
-              
-        else:
-            if chain == 'HL':
-                numbered_seqs, seqs, number_alignment = paired_msa_numbering(seqs, self.ncpu)
-            else:
-                numbered_seqs, seqs, number_alignment = unpaired_msa_numbering(seqs, chain = chain, ncpus = self.ncpu)
-                
-            residue_states = self.encode_sequences(seqs)
-
-            residue_output = np.concatenate(
-                [[
-                    create_alignment(
-                        res_embed, numbered_seq, seq, number_alignment
-                    ) for res_embed, numbered_seq, seq in zip(residue_states, numbered_seqs, seqs)
-                ]], axis=0
-            )
+        if align: return encodings
             
-            del residue_states
+        else: return [res_to_list(state, seq) for state, seq in zip(encodings, seqs)]
+        
+    def likelihood(self, seqs, align=False, chain = 'H'):
+        """
+        Possible Mutations
+        """
+        logits = self._predict_logits(seqs).numpy()
+        
+        if align: return logits
             
-            return aligned_results(
-                aligned_embeds=residue_output, 
-                number_alignment=number_alignment.apply(lambda x: '{}{}'.format(*x[0]), axis=1).values
-            )
+        else: return 
         
+    def probability(self, seqs, align=False, chain = 'H'):
+        """
+        Possible Mutations
+        """
+        logits = self._predict_logits(seqs).numpy()
+        probs = logits.softmax(1).numpy()
         
-
-@dataclass
-class aligned_results():
-    """
-    Dataclass used to store output.
-    """
-
-    aligned_embeds: None
-    number_alignment: None
+        if align: return probs
+            
+        else: return [res_to_list(state, seq) for state, seq in zip(probs, seqs)]
+            
