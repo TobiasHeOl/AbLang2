@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 import torch
 
-from .extra_utils import paired_msa_numbering, unpaired_msa_numbering, create_alignment, res_to_list, res_to_seq
+from .extra_utils import res_to_list, res_to_seq
 
 
 class AbEncoding:
@@ -24,7 +24,7 @@ class AbEncoding:
     def _predict_logits(self, seqs):
         tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)
         with torch.no_grad():
-            return self.AbLang(tokens)
+            return self.AbLang(tokens), tokens
 
     def seqcoding(self, seqs, align=False, chain = 'H'):
         """
@@ -51,7 +51,7 @@ class AbEncoding:
         """
         Possible Mutations
         """
-        logits = self._predict_logits(seqs).numpy()
+        logits, _ = self._predict_logits(seqs).numpy()
         
         if align: return logits
             
@@ -61,7 +61,7 @@ class AbEncoding:
         """
         Possible Mutations
         """
-        logits = self._predict_logits(seqs).numpy()
+        logits, _ = self._predict_logits(seqs).numpy()
         probs = logits.softmax(1).numpy()
         
         if align: return probs

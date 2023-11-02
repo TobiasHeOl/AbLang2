@@ -37,6 +37,16 @@ class ABtokenizer:
         self.start_token = self.aa_to_token['<']
         self.end_token = self.aa_to_token['>']
         self.sep_token = self.aa_to_token['|']
+        self.mask_token = self.aa_to_token['*']
+        self.unknown_token = self.aa_to_token['X']
+        self.all_special_tokens = [
+            self.pad_token,
+            self.start_token,
+            self.end_token,
+            self.sep_token,
+            self.mask_token,
+            self.unknown_token
+        ]
      
     def encode(self, sequence, w_extra_tkns=True, device='cpu'):
         

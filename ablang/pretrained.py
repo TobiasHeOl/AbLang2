@@ -7,9 +7,10 @@ from .load_model import load_model
 from .pretrained_utils.restoration import AbRestore
 from .pretrained_utils.encodings import AbEncoding
 from .pretrained_utils.alignment import AbAlignment
+from .pretrained_utils.scores import AbScores
 
 
-class pretrained(AbEncoding, AbRestore, AbAlignment):
+class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
     """
     Initializes AbLang for heavy or light chains.    
     """
@@ -35,12 +36,20 @@ class pretrained(AbEncoding, AbRestore, AbAlignment):
         """
         Mode: sequence, residue, restore or likelihood.
         """
-        if not mode in ['rescoding', 'seqcoding', 'restore', 'likelihood']:
+        if not mode in [
+            'rescoding', 'seqcoding', 'restore', 'likelihood', 'probability',
+            'pseudo_log_likelihood', 'confidence'
+        ]:
             raise SyntaxError("Given mode doesn't exist.")
         
         seqs, chain = prepare_sequences(seqs, fragmented = fragmented) 
         if align:
-            numbered_seqs, seqs, number_alignment = self.number_sequences(seqs, chain = chain, fragmented = fragmented)
+            numbered_seqs, seqs, number_alignment = self.number_sequences(
+                seqs, chain = chain, fragmented = fragmented
+            )
+        else:
+            numbered_seqs = None
+            number_alignment = None
         
         subset_list = []
         for subset in [seqs[x:x+chunk_size] for x in range(0, len(seqs), chunk_size)]:
@@ -57,14 +66,11 @@ class pretrained(AbEncoding, AbRestore, AbAlignment):
         
         
 def prepare_sequences(seqs, fragmented = False):
-        
-    if isinstance(seqs, list):
-        if isinstance(seqs[0], dict):
-            seqs = convert_many_dicts(seqs, fragmented = fragmented)
-        else:
-            seqs = [seqs] 
-        
-    if isinstance(seqs, dict): 
+    
+    if not isinstance(seqs, list):
+        seqs = [seqs]
+    
+    if isinstance(seqs[0], dict):   
         seqs = convert_many_dicts(seqs, fragmented = fragmented)
         
     return seqs, determine_chain(seqs[0])

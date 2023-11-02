@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 import torch
 
-from .extra_utils import paired_msa_numbering, unpaired_msa_numbering, create_alignment, res_to_list, res_to_seq
+from .extra_utils import paired_msa_numbering, unpaired_msa_numbering, create_alignment
 
 
 class AbAlignment:
@@ -44,7 +44,12 @@ class AbAlignment:
         number_alignment = None,
     ):
         
-        if mode in ['seqcoding', 'restore']:
+        if mode in [
+            'seqcoding', 
+            'restore',
+            'pseudo_log_likelihood',
+            'confidence'
+        ]:
             return np.concatenate(subset_list)
         elif align:
             subset_list = [
