@@ -5,7 +5,7 @@ from .vocab import ablang_vocab
 
 class ABtokenizer:
     """
-    Tokenizer for proteins (focus on handling antibodies). Both aa to token and token to aa.
+    Tokenizer for the heavy/light chain of antibodies.
     """
     
     def __init__(self, vocab_dir=None):
@@ -13,14 +13,17 @@ class ABtokenizer:
         
     def __call__(self, sequence_list, mode='encode', pad=False, w_extra_tkns=True, device='cpu'):
         
-        sequence_list = [sequence_list] if isinstance(sequence_list, str) else sequence_list
-        
+        if w_extra_tkns:
+            sequence_list = [sequence_list] if isinstance(sequence_list[0], str) else sequence_list
+        else:
+            sequence_list = [sequence_list] if isinstance(sequence_list, str) else sequence_list
+
         if mode == 'encode': 
             data = [self.encode(seq, w_extra_tkns = w_extra_tkns, device = device) for seq in sequence_list]
             if pad: return torch.nn.utils.rnn.pad_sequence(data, batch_first=True, padding_value=self.pad_token)
             else: return data
         elif mode == 'decode': 
-            return [self.decode(tokenized_seq, w_extra_tkns = w_extra_tkns) for tokenized_seq in sequence_list]
+            return [self.decode(tokenized_seq) for tokenized_seq in sequence_list]
         else:
             raise SyntaxError("Given mode doesn't exist. Use either encode or decode.")
     
@@ -51,20 +54,17 @@ class ABtokenizer:
     def encode(self, sequence, w_extra_tkns=True, device='cpu'):
         
         if w_extra_tkns:
-            tokenized_seq = [self.aa_to_token["<"]]+[self.aa_to_token[resn] for resn in sequence]+[self.aa_to_token[">"]]
-        else:
-            tokenized_seq = [self.aa_to_token[resn] for resn in sequence]
+            heavy, light = sequence
+            sequence = f"<{heavy}>|<{light}>".replace("<>","")
         
+        tokenized_seq = [self.aa_to_token[resn] for resn in sequence]
         return torch.tensor(tokenized_seq, dtype=torch.long, device=device)
     
-    def decode(self, tokenized_seq, w_extra_tkns=True):
+    def decode(self, tokenized_seq):
         
         if torch.is_tensor(tokenized_seq): tokenized_seq = tokenized_seq.cpu().numpy()
         
-        if w_extra_tkns:
-            return ''.join([self.token_to_aa[token] for token in tokenized_seq[1:-1]])
-        else:
-            return ''.join([self.token_to_aa[token] for token in tokenized_seq])
+        return ''.join([self.token_to_aa[token] for token in tokenized_seq])
     
 
     

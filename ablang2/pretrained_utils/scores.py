@@ -26,7 +26,7 @@ class AbScores:
         with torch.no_grad():
             return self.AbLang(tokens), tokens
         
-    def pseudo_log_likelihood(self, seqs, align=False, chain = 'H'):
+    def pseudo_log_likelihood(self, seqs, **kwargs):
         """
         Pseudo log likelihood of sequences.
         """
@@ -68,7 +68,7 @@ class AbScores:
 
         return plls  
     
-    def confidence(self, seqs, align=False, chain = 'H'):
+    def confidence(self, seqs, **kwargs):
         """
         Log likelihood of sequences without masking.
         """
@@ -76,24 +76,24 @@ class AbScores:
         labels = self.tokenizer(
                 seqs, pad=True, w_extra_tkns=False, device=self.used_device
             )
-
-        idxs = (
-            ~torch.isin(labels, torch.Tensor(self.tokenizer.all_special_tokens))
-        ).nonzero()
-        
         with torch.no_grad():
             logits = self.AbLang(labels)
+            logits[:, :, self.tokenizer.all_special_tokens] = -float("inf")  
             
-        logits[:, :, self.tokenizer.all_special_tokens] = -float("inf")  
-        
-        logits = torch.stack([logits[num, idx] for num, idx in idxs])
-        labels = labels[:,idxs[:,1:]].squeeze(2)[0]
-        nll = torch.nn.functional.cross_entropy(
-                    logits,
-                    labels,
-                    reduction="mean",
-                )
-        
-        pll = -nll
+        plls = []
+        for label, logit in zip(labels, logits):
+            
+            idxs = (
+                ~torch.isin(label, torch.Tensor(self.tokenizer.all_special_tokens))
+            ).nonzero().squeeze(1)
 
-        return pll.unsqueeze(0).numpy()
+            nll = torch.nn.functional.cross_entropy(
+                        logit[idxs],
+                        label[idxs],
+                        reduction="mean",
+                    )
+
+            pll = -nll
+            plls.append(pll)
+
+        return torch.stack(plls, dim=0).numpy()

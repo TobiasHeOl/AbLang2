@@ -4,7 +4,7 @@ ablang_vocab = {
     "-": 21,   # Padding token
     ">": 22,   # End token
     "*": 23,   # Mask token
-    "X": 24,   # Unknown (residues) token
+    "X": 24,   # Unknown (residue) token
     "|": 25,   # Separation (of heavy and light chain) token
     "M": 1, 
     "R": 2, 

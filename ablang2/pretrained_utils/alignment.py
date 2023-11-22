@@ -59,9 +59,13 @@ class AbAlignment:
                     seqs[num*len(subset):(num+1)*len(subset)], 
                     number_alignment
                 ) for num, subset in enumerate(subset_list)
-            ]            
+            ]       
+            
+            subset = np.concatenate(subset_list)
+            
             return aligned_results(
-                aligned_embeds=np.concatenate(subset_list),
+                aligned_seqs = [''.join(alist) for alist in subset[:,:,-1]],
+                aligned_embeds = subset[:,:,:-1].astype(float),
                 number_alignment=number_alignment.apply(lambda x: '{}{}'.format(*x[0]), axis=1).values
             ) 
     
@@ -76,6 +80,7 @@ class aligned_results():
     """
     Dataclass used to store output.
     """
-
+    
+    aligned_seqs: None
     aligned_embeds: None
     number_alignment: None

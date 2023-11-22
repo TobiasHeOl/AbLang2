@@ -24,9 +24,9 @@ class AbEncoding:
     def _predict_logits(self, seqs):
         tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)
         with torch.no_grad():
-            return self.AbLang(tokens), tokens
+            return self.AbLang(tokens)
 
-    def seqcoding(self, seqs, align=False, chain = 'H'):
+    def seqcoding(self, seqs, **kwargs):
         """
         Sequence specific representations
         """
@@ -37,7 +37,7 @@ class AbEncoding:
         lens = np.tile(lens.reshape(-1,1,1), (encodings.shape[2], 1))
         return np.apply_along_axis(res_to_seq, 2, np.c_[np.swapaxes(encodings,1,2), lens])
         
-    def rescoding(self, seqs, align=False, chain = 'H'):
+    def rescoding(self, seqs, align=False):
         """
         Residue specific representations.
         """
@@ -47,21 +47,21 @@ class AbEncoding:
             
         else: return [res_to_list(state, seq) for state, seq in zip(encodings, seqs)]
         
-    def likelihood(self, seqs, align=False, chain = 'H'):
+    def likelihood(self, seqs, align=False):
         """
-        Possible Mutations
+        Likelihood of mutations
         """
-        logits, _ = self._predict_logits(seqs).numpy()
+        logits = self._predict_logits(seqs).numpy()
         
         if align: return logits
             
         else: return [res_to_list(state, seq) for state, seq in zip(logits, seqs)]
         
-    def probability(self, seqs, align=False, chain = 'H'):
+    def probability(self, seqs, align=False):
         """
-        Possible Mutations
+        Probability of mutations
         """
-        logits, _ = self._predict_logits(seqs).numpy()
+        logits = self._predict_logits(seqs)
         probs = logits.softmax(1).numpy()
         
         if align: return probs

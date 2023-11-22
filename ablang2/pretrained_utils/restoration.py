@@ -20,12 +20,11 @@ class AbRestore:
         """
 
         if align:
-            
-            seqs = self._sequence_aligning(seqs, chain)
+            seqs = self._sequence_aligning(seqs)
             
             nr_seqs = len(seqs)//self.spread
             
-            tokens = self.tokenizer(seqs, pad=True, device=self.device)            
+            tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)          
             predictions = self.AbLang(tokens)[:,:,1:21]
 
             # Reshape
@@ -42,7 +41,7 @@ class AbRestore:
             seqs = np.take_along_axis(seqs, best_seq_idx.view(-1, 1).cpu().numpy(), axis=1)
 
         else:
-            tokens = self.tokenizer(seqs, pad=True, device=self.device)
+            tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)
             predictions = self.AbLang(tokens)[:,:,1:21]
 
         predicted_tokens = torch.max(predictions, -1).indices + 1

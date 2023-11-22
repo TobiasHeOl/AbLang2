@@ -23,8 +23,7 @@ class AbLang(torch.nn.Module):
         mask_tkn,
         layer_norm_eps: float = 1e-12,
         a_fn: str = "gelu",
-        dropout: float = 0.0, 
-        use_tkn_dropout: bool = False,
+        dropout: float = 0.0,
     ):
         super().__init__()
                 
@@ -37,8 +36,7 @@ class AbLang(torch.nn.Module):
             mask_tkn,
             layer_norm_eps,
             a_fn,
-            dropout, 
-            use_tkn_dropout,
+            dropout,
         )       
         self.AbHead = AbHead(
             vocab_size,
@@ -82,12 +80,10 @@ class AbRep(torch.nn.Module):
         layer_norm_eps: float = 1e-12,
         a_fn: str = "gelu",
         dropout: float = 0.1, 
-        use_tkn_dropout: bool = False,
     ):
         super().__init__()
         self.padding_tkn = padding_tkn
         self.mask_tkn = mask_tkn
-        self.use_tkn_dropout = use_tkn_dropout
         
         self.aa_embed_layer = nn.Embedding(
             vocab_size, 
@@ -104,18 +100,7 @@ class AbRep(torch.nn.Module):
             ) for _ in range(n_encoder_blocks)]
         )
         self.layer_norm_after_encoder_blocks = nn.LayerNorm(hidden_embed_size, eps=layer_norm_eps)
-        
-    def token_dropout(hidden_embed, tokens, padding_mask):
-        
-        hidden_embed.masked_fill_((tokens == self.mask_tkn).unsqueeze(-1), 0.0)
-        # x: B x T x C
-        mask_ratio_train = 0.15 * 0.8
-        src_lengths = (~padding_mask).sum(-1)
-        mask_ratio_observed = (tokens == self.mask_tkn).sum(-1).to(x.dtype) / src_lengths
-        hidden_embed = hidden_embed * (1 - mask_ratio_train) / (1 - mask_ratio_observed)[:, None, None]
-        
-        return hidden_embed
-        
+
     def forward(self, 
                 tokens, 
                 return_attn_weights=False, 
@@ -125,10 +110,7 @@ class AbRep(torch.nn.Module):
         assert tokens.ndim == 2
         padding_mask = tokens.eq(self.padding_tkn)
 
-        hidden_embed = self.aa_embed_layer(tokens)
-        
-        if self.use_tkn_dropout:
-            hidden_embed = token_dropout(hidden_embed, tokens, padding_mask)        
+        hidden_embed = self.aa_embed_layer(tokens)       
         
         return_rep_layers = set(return_rep_layers)
         rep_layers = {}

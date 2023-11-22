@@ -9,13 +9,18 @@ from .pretrained_utils.encodings import AbEncoding
 from .pretrained_utils.alignment import AbAlignment
 from .pretrained_utils.scores import AbScores
 
+valid_modes = [
+    'rescoding', 'seqcoding', 'restore', 'likelihood', 'probability',
+    'pseudo_log_likelihood', 'confidence'
+]
+
 
 class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
     """
     Initializes AbLang for heavy or light chains.    
     """
     
-    def __init__(self, model_to_use="download", random_init=False, ncpu=1, device='cpu'):
+    def __init__(self, model_to_use = "ablang2-paired", random_init = False, ncpu = 1, device = 'cpu'):
         super().__init__()
         
         self.used_device = torch.device(device)
@@ -32,17 +37,14 @@ class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
     def unfreeze(self):
         self.AbLang.train()
         
-    def __call__(self, seqs, mode='seqcoding', align=False, fragmented = False, chunk_size=50):
+    def __call__(self, seqs, mode = 'seqcoding', align = False, fragmented = False, batch_size = 50):
         """
-        Mode: sequence, residue, restore or likelihood.
+        Use different modes for different usecases
         """
-        if not mode in [
-            'rescoding', 'seqcoding', 'restore', 'likelihood', 'probability',
-            'pseudo_log_likelihood', 'confidence'
-        ]:
-            raise SyntaxError("Given mode doesn't exist.")
+        if not mode in valid_modes: raise SyntaxError(f"Given mode doesn't exist. Please select one of the following: {valid_modes}.")
         
-        seqs, chain = prepare_sequences(seqs, fragmented = fragmented) 
+        seqs, chain = format_seq_input(seqs, fragmented = fragmented) 
+        
         if align:
             numbered_seqs, seqs, number_alignment = self.number_sequences(
                 seqs, chain = chain, fragmented = fragmented
@@ -52,8 +54,8 @@ class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
             number_alignment = None
         
         subset_list = []
-        for subset in [seqs[x:x+chunk_size] for x in range(0, len(seqs), chunk_size)]:
-            subset_list.append(getattr(self, mode)(subset, align, chain = chain))
+        for subset in [seqs[x:x+batch_size] for x in range(0, len(seqs), batch_size)]:
+            subset_list.append(getattr(self, mode)(subset, align = align))
 
         return self.reformat_subsets(
             subset_list, 
@@ -65,33 +67,32 @@ class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
         )
         
         
-def prepare_sequences(seqs, fragmented = False):
-    
-    if not isinstance(seqs, list):
+def format_seq_input(seqs, fragmented = False):
+    """
+    Formats input sequences into the correct format for the tokenizer.
+    """
+    if isinstance(seqs[0], str):
         seqs = [seqs]
     
-    if isinstance(seqs[0], dict):   
-        seqs = convert_many_dicts(seqs, fragmented = fragmented)
-        
+    seqs = [add_extra_tokens(seq) for seq in seqs]
+
     return seqs, determine_chain(seqs[0])
     
-        
-        
-def convert_many_dicts(dict_list, fragmented = False):
-    if isinstance(dict_list, dict): dict_list = [dict_list]
-
-    return [convert_dicts(adict, fragmented = fragmented) for adict in dict_list]
-     
-def convert_dicts(a_dict, fragmented = False):
-    heavy = a_dict.get('H') or ''
-    light = a_dict.get('L') or ''
-    return f"{heavy}|{light}" if fragmented else f"<{heavy}>|<{light}>".replace("<>","")
+    
+def add_extra_tokens(seq, fragmented = False):
+    
+    heavy, light = seq
+    
+    if fragmented:
+        return f"{heavy}|{light}"
+    else:
+        return f"<{heavy}>|<{light}>".replace("<>","")
     
         
-def determine_chain(seq):
-    
-    chain = ''
+def determine_chain(seq): 
     h, l = seq.split('|')
+      
+    chain = ''
     if len(h)>2: chain+='H'
     if len(l)>2: chain+='L'
     

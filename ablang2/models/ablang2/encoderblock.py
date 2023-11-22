@@ -21,7 +21,7 @@ class TransformerEncoder(torch.nn.Module):
         super().__init__()
         
         assert hidden_embed_size % n_attn_heads == 0, \
-        "Embedding dimension must be devidable with the number of heads." 
+        "Embedding dimension must be devisible with the number of heads." 
         
         self.multihead_attention = MultiHeadAttention(
             embed_dim = hidden_embed_size, 
