@@ -39,7 +39,7 @@ class AbScores:
             )
             
             idxs = (
-                ~torch.isin(labels, torch.Tensor(self.tokenizer.all_special_tokens))
+                ~torch.isin(labels, torch.Tensor(self.tokenizer.all_special_tokens).to(self.used_device))
             ).nonzero()
             
             masked_tokens = labels.repeat(len(idxs), 1)
@@ -64,7 +64,7 @@ class AbScores:
 
             plls.append(pll)
     
-        plls = torch.stack(plls, dim=0).numpy()
+        plls = torch.stack(plls, dim=0).cpu().numpy()
 
         return plls  
     
@@ -84,7 +84,7 @@ class AbScores:
         for label, logit in zip(labels, logits):
             
             idxs = (
-                ~torch.isin(label, torch.Tensor(self.tokenizer.all_special_tokens))
+                ~torch.isin(label, torch.Tensor(self.tokenizer.all_special_tokens).to(self.used_device))
             ).nonzero().squeeze(1)
 
             nll = torch.nn.functional.cross_entropy(
@@ -96,4 +96,4 @@ class AbScores:
             pll = -nll
             plls.append(pll)
 
-        return torch.stack(plls, dim=0).numpy()
+        return torch.stack(plls, dim=0).cpu().numpy()

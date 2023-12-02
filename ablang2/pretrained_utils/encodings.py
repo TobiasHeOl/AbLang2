@@ -19,7 +19,7 @@ class AbEncoding:
     def _encode_sequences(self, seqs):
         tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)
         with torch.no_grad():
-            return self.AbLang.AbRep(tokens).last_hidden_states.numpy()
+            return self.AbLang.AbRep(tokens).last_hidden_states
         
     def _predict_logits(self, seqs):
         tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)
@@ -31,7 +31,7 @@ class AbEncoding:
         Sequence specific representations
         """
         
-        encodings = self._encode_sequences(seqs)
+        encodings = self._encode_sequences(seqs).cpu().numpy()
         
         lens = np.vectorize(len)(seqs)
         lens = np.tile(lens.reshape(-1,1,1), (encodings.shape[2], 1))
@@ -41,7 +41,7 @@ class AbEncoding:
         """
         Residue specific representations.
         """
-        encodings = self._encode_sequences(seqs)
+        encodings = self._encode_sequences(seqs).cpu().numpy()
            
         if align: return encodings
             
@@ -51,7 +51,7 @@ class AbEncoding:
         """
         Likelihood of mutations
         """
-        logits = self._predict_logits(seqs).numpy()
+        logits = self._predict_logits(seqs).cpu().numpy()
         
         if align: return logits
             
@@ -62,7 +62,7 @@ class AbEncoding:
         Probability of mutations
         """
         logits = self._predict_logits(seqs)
-        probs = logits.softmax(1).numpy()
+        probs = logits.softmax(1).cpu().numpy()
         
         if align: return probs
             

@@ -26,6 +26,7 @@ class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
         self.used_device = torch.device(device)
         
         self.AbLang, self.tokenizer, self.hparams = load_model(model_to_use)
+        self.AbLang.to(self.used_device)
         self.AbLang.eval() # Default 
         
         self.ncpu = ncpu

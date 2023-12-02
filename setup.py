@@ -21,7 +21,7 @@ setup(
     maintainer_email='tobiasheol@gmail.com',
     url="",
     include_package_data=True,
-    packages=find_packages(include=('ablang', 'ablang.*')),
+    packages=find_packages(include=('ablang2', 'ablang2.*')),
     install_requires=[
         'torch>1.9',
         'requests',
