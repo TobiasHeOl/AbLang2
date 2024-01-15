@@ -13,7 +13,7 @@ setup(
     name='ablang2',
     version='0.1.0',
     license='BSD 3-clause license',
-    description='AbLang: A language model for antibodies.',
+    description='AbLang2: An antibody-specific language model focusing on NGL prediction.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     author="Tobias Hegelund Olsen",

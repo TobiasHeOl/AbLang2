@@ -16,8 +16,9 @@ class AbAlignment:
         if chain == 'HL':
             numbered_seqs, seqs, number_alignment = paired_msa_numbering(seqs, fragmented = fragmented, n_jobs = self.ncpu)
         else:
+            assert chain == 'HL', 'Currently "Align==True" only works for paired sequences. \nPlease use paired sequences or Align=False.'
             numbered_seqs, seqs, number_alignment = unpaired_msa_numbering(
-                seqs, chain = chain, ncpus = self.ncpu, fragmented = fragmented
+                seqs, chain = chain, fragmented = fragmented, n_jobs = self.ncpu
             )
         
         return numbered_seqs, seqs, number_alignment

@@ -14,14 +14,15 @@ class AbRestore:
         self.AbLang = model
         self.tokenizer = tokenizer
 
-    def restore(self, seqs, align = False, chain = 'H'):
+    def restore(self, seqs, align = False, **kwargs):
         """
         Restore sequences
         """
-
+        n_seqs = len(seqs)
+        
         if align:
-            seqs = self._sequence_aligning(seqs)
             
+            seqs = self._sequence_aligning(seqs)
             nr_seqs = len(seqs)//self.spread
             
             tokens = self.tokenizer(seqs, pad=True, w_extra_tkns=False, device=self.used_device)          
@@ -49,22 +50,26 @@ class AbRestore:
 
         restored_seqs = self.tokenizer(restored_tokens, mode="decode")
 
+        if n_seqs < len(restored_seqs):
+            restored_seqs = [f"{h}|{l}".replace('-','') for h,l in zip(restored_seqs[:n_seqs], restored_seqs[n_seqs:])]
+            seqs = [f"{h}|{l}" for h,l in zip(seqs[:n_seqs], seqs[n_seqs:])]
+        
         return np.array([res_to_seq(seq, 'restore') for seq in np.c_[restored_seqs, np.vectorize(len)(seqs)]])
     
-    def _sequence_aligning(self, seqs, chain):
-        
+    def _create_spread_of_sequences(self, seqs, chain = 'H'):
         import pandas as pd
         import anarci
-
-        anarci_out = anarci.run_anarci(
-            pd.DataFrame([seq.replace('*', 'X') for seq in seqs]).reset_index().values.tolist(), 
+        
+        chain_idx = 0 if chain == 'H' else 1
+        numbered_seqs = anarci.run_anarci(
+            pd.DataFrame([seq[chain_idx].replace('*', 'X') for seq in seqs]).reset_index().values.tolist(), 
             ncpu=self.ncpu, 
             scheme='imgt',
             allowed_species=['human', 'mouse'],
         )
         
         anarci_data = pd.DataFrame(
-            [str(anarci[0][0]) if anarci else 'ANARCI_error' for anarci in anarci_out[1]], 
+            [str(anarci[0][0]) if anarci else 'ANARCI_error' for anarci in numbered_seqs[1]], 
             columns=['anarci']
         ).astype('<U90')
         
@@ -77,5 +82,15 @@ class AbRestore:
                 self.spread
             ), axis=1, result_type='expand'
         ).to_numpy().reshape(-1)
-         
+        
         return seqs
+        
+    
+    def _sequence_aligning(self, seqs):
+
+        tmp_seqs = [pairs.replace(">", "").replace("<", "").split("|") for pairs in seqs]
+        
+        spread_heavy = [f"<{seq}>" for seq in self._create_spread_of_sequences(tmp_seqs, chain = 'H')]
+        spread_light = [f"<{seq}>" for seq in self._create_spread_of_sequences(tmp_seqs, chain = 'L')]
+        
+        return np.concatenate([np.array(spread_heavy),np.array(spread_light)])

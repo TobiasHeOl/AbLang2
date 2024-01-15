@@ -1,7 +1,5 @@
 import numpy as np
 import torch
-from dataclasses import dataclass
-
 
 from .load_model import load_model
 from .pretrained_utils.restoration import AbRestore
@@ -28,6 +26,7 @@ class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
         self.AbLang, self.tokenizer, self.hparams = load_model(model_to_use)
         self.AbLang.to(self.used_device)
         self.AbLang.eval() # Default 
+        self.AbRep = self.AbLang.AbRep
         
         self.ncpu = ncpu
         self.spread = 11 # Based on get_spread_sequences function
@@ -45,7 +44,7 @@ class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
         if not mode in valid_modes: raise SyntaxError(f"Given mode doesn't exist. Please select one of the following: {valid_modes}.")
         
         seqs, chain = format_seq_input(seqs, fragmented = fragmented) 
-        
+
         if align:
             numbered_seqs, seqs, number_alignment = self.number_sequences(
                 seqs, chain = chain, fragmented = fragmented

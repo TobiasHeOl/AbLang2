@@ -1,10 +1,4 @@
-import os, string, re
-from dataclasses import dataclass
-
-from numba import jit
-from numba.typed import Dict, List
-from numba.types import unicode_type
-
+import string, re
 import numpy as np
 
 
@@ -87,7 +81,7 @@ def paired_msa_numbering(ab_seqs, fragmented = False, n_jobs = 10):
     return numbered_seqs, seqs, number_alignment
 
 
-def unpaired_msa_numbering(seqs, chain = 'H', n_jobs = 10, fragmented = False):
+def unpaired_msa_numbering(seqs, chain = 'H', fragmented = False, n_jobs = 10):
     
     numbered_seqs = number_with_anarci(seqs, chain = chain, fragmented = fragmented, n_jobs = n_jobs)
     number_alignment = get_number_alignment(numbered_seqs)
@@ -110,7 +104,7 @@ def number_with_anarci(seqs, chain = 'H', fragmented = False, n_jobs = 1):
     )
     
     numbered_seqs = []
-    for onarci in anarci_out[1]:
+    for onarci in anarci_out[1]:            
         numbered_seq = []
         for i in onarci[0][0]:
             if i[1] != '-':
@@ -138,26 +132,17 @@ def create_alignment(res_embeds, numbered_seqs, seq, number_alignment):
     
     return pd.concat([aligned_embeds, sequence_alignment], axis=1).values
 
-def turn_into_numba(anarcis):
-    """
-    Turns the nested anarci dictionary into a numba item, allowing us to use numba on it.
-    """
-    
-    anarci_list = List.empty_list(unicode_type)
-    [anarci_list.append(str(anarci)) for anarci in anarcis]
 
-    return anarci_list
-
-@jit(nopython=True)
-def get_spread_sequences(seq, spread, start_position, numbaList):
+def get_spread_sequences(seq, spread, start_position):
     """
     Test sequences which are 8 positions shorter (position 10 + max CDR1 gap of 7) up to 2 positions longer (possible insertions).
     """
+    spread_sequences = []
 
     for diff in range(start_position-8, start_position+2+1):
-        numbaList.append('*'*diff+seq)
+        spread_sequences.append('*'*diff+seq)
     
-    return numbaList
+    return np.array(spread_sequences)
 
 def get_sequences_from_anarci(out_anarci, max_position, spread):
     """
@@ -175,9 +160,6 @@ def get_sequences_from_anarci(out_anarci, max_position, spread):
     sequence = "".join(re.findall(r"(?i)[A-Z*]", "".join(re.findall(r'\),\s\'[A-Z*]', out_anarci))))
 
     sequence_j = ''.join(sequence).replace('-','').replace('X','*') + '*'*(max_position-int(end_position))
-    
-    numba_list = List.empty_list(unicode_type)
 
-    spread_seqs = np.array(get_spread_sequences(sequence_j, spread, start_position, numba_list))
+    return get_spread_sequences(sequence_j, spread, start_position)
 
-    return spread_seqs
