@@ -3,7 +3,8 @@
 
 <div align="center">    
  
-# Ablang-2 - based on the paper "Addressing the antibody germline bias and its effect on language models for improved antibody design". 
+# AbLang-2 
+## Addressing the antibody germline bias and its effect on language models for improved antibody design 
 
 </div> 
 
@@ -28,7 +29,7 @@ AbLang is freely available and can be installed with pip.
 or directly from github.
 
 ~~~.sh
-    pip install -U git+https://github.com/oxpig/AbLang.git
+    pip install -U git+https://github.com/oxpig/AbLang2.git
 ~~~
 
 **NB:** If you want to have your returned output aligned (i.e. use the argument "align=True"), you need to manually install **Pandas** and a version of **[ANARCI](https://github.com/oxpig/ANARCI)** in the same environment. ANARCI can also be installed using bioconda; however, this version is maintained by a third party.
