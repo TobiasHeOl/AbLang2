@@ -81,7 +81,7 @@ with torch.no_grad():
 ### Citation   
 ```
 @article{Olsen2024,
-  title={},
+  title={Addressing the antibody germline bias and its effect on language models for improved antibody design},
   author={Tobias H. Olsen, Iain H. Moal and Charlotte M. Deane},
   journal={in-preparation},
   doi={},

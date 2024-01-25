@@ -1,9 +1,9 @@
 import os, subprocess, json, argparse,requests
 import torch
 
-ablang_models = {
+list_of_models = {
     "ablang1-heavy":["https://opig.stats.ox.ac.uk/data/downloads/ablang-heavy.tar.gz", "amodel.pt"], 
-    "ablang1-light":["https://opig.stats.ox.ac.uk/data/downloads/ablang-heavy.tar.gz", "amodel.pt"],
+    "ablang1-light":["https://opig.stats.ox.ac.uk/data/downloads/ablang-light.tar.gz", "amodel.pt"],
     "ablang2-paired":["https://zenodo.org/records/10185169/files/ablang2-weights.tar.gz", "model.pt"]
 }
 ablang1_models = ["ablang1-heavy", "ablang1-light"]
@@ -11,11 +11,10 @@ ablang2_models = ["ablang2-paired"]
 
 
 def load_model(model_to_use = "ablang2-paired", random_init = False, device = 'cpu'):
-    
+
     if model_to_use in ablang1_models:
-        chain = "heavy" if "heavy" in model_to_use else "light"
         AbLang, tokenizer, hparams = fetch_ablang1(
-            chain, 
+            model_to_use, 
             random_init=random_init, 
             device=device
         )
@@ -39,18 +38,20 @@ def load_model(model_to_use = "ablang2-paired", random_init = False, device = 'c
     
     
 def download_model(model_to_use = "ablang2-paired"):
-    
-    # Download model to specific place - if already downloaded use it without downloading again
+    """
+    If not already downloaded, download model inside environment.
+    """
+
     local_model_folder = os.path.join(os.path.dirname(__file__), "model-weights-{}".format(model_to_use))
     os.makedirs(local_model_folder, exist_ok = True)
 
-    if not os.path.isfile(os.path.join(local_model_folder, ablang_models[model_to_use][1])):
-        print("Downloading model ...")
+    file_w_weights, file_model = list_of_models[model_to_use]
 
-        url = ablang_models[model_to_use][0]
+    if not os.path.isfile(os.path.join(local_model_folder, file_model)):
+        print("Downloading model ...")
         tmp_file = os.path.join(local_model_folder, "tmp.tar.gz")
 
-        with open(tmp_file,'wb') as f: f.write(requests.get(url).content)
+        with open(tmp_file,'wb') as f: f.write(requests.get(file_w_weights).content)
 
         subprocess.run(["tar", "-zxvf", tmp_file, "-C", local_model_folder], check = True) 
         os.remove(tmp_file)
@@ -76,7 +77,7 @@ def fetch_ablang1(model_to_use, random_init=False, device='cpu'):
                 map_location=torch.device(device)
             )
         )
-    tokenizer = ablang_1_tokenizer.ABtokenizer(os.path.join(model_folder, 'vocab.json'))
+    tokenizer = ablang_1_tokenizer.ABtokenizer(os.path.join(local_model_folder, 'vocab.json'))
         
     return AbLang, tokenizer, hparams
 
