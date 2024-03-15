@@ -2,23 +2,23 @@ import string, re
 import numpy as np
 
 
-def res_to_list(state, seq):
-    return state[1:1+len(seq)]
+def res_to_list(logits, seq):
+    return logits[:len(seq)]
 
 def res_to_seq(a, mode='mean'):
     """
     Function for how we go from n_values for each amino acid to n_values for each sequence.
     
-    We leave out the start, end and padding tokens.
+    We leave out padding tokens.
     """
+    
     if mode=='sum':
-        return a[1:(1+int(a[-1]))].sum()
+        return a[0:(int(a[-1]))].sum()
     
     elif mode=='mean':
-        return a[1:(1+int(a[-1]))].mean()
+        return a[0:(int(a[-1]))].mean()
     
     elif mode=='restore':
-        
         return a[0][0:(int(a[-1]))]
 
 def get_number_alignment(numbered_seqs):

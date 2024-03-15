@@ -37,7 +37,7 @@ class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
     def unfreeze(self):
         self.AbLang.train()
         
-    def __call__(self, seqs, mode = 'seqcoding', align = False, fragmented = False, batch_size = 50):
+    def __call__(self, seqs, mode = 'seqcoding', align = False, stepwise_masking=False, fragmented = False, batch_size = 50):
         """
         Use different modes for different usecases
         """
@@ -55,7 +55,7 @@ class pretrained(AbEncoding, AbRestore, AbAlignment, AbScores):
         
         subset_list = []
         for subset in [seqs[x:x+batch_size] for x in range(0, len(seqs), batch_size)]:
-            subset_list.append(getattr(self, mode)(subset, align = align))
+            subset_list.append(getattr(self, mode)(subset, align = align, stepwise_masking=stepwise_masking))
 
         return self.reformat_subsets(
             subset_list, 
