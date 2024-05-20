@@ -4,10 +4,11 @@ import torch
 list_of_models = {
     "ablang1-heavy":["https://opig.stats.ox.ac.uk/data/downloads/ablang-heavy.tar.gz", "amodel.pt"], 
     "ablang1-light":["https://opig.stats.ox.ac.uk/data/downloads/ablang-light.tar.gz", "amodel.pt"],
-    "ablang2-paired":["https://zenodo.org/records/10185169/files/ablang2-weights.tar.gz", "model.pt"]
+    "ablang2-paired":["https://zenodo.org/records/10185169/files/ablang2-weights.tar.gz", "model.pt"],
+    "tcrlang-paired":["https://zenodo.org/records/11208211/files/tcrlang-weights.tar.gz", "model.pt"],
 }
 ablang1_models = ["ablang1-heavy", "ablang1-light"]
-ablang2_models = ["ablang2-paired"]
+ablang2_models = ["ablang2-paired", "tcrlang-paired"]
 
 
 def load_model(model_to_use = "ablang2-paired", random_init = False, device = 'cpu'):
@@ -45,7 +46,7 @@ def download_model(model_to_use = "ablang2-paired"):
     local_model_folder = os.path.join(os.path.dirname(__file__), "model-weights-{}".format(model_to_use))
     os.makedirs(local_model_folder, exist_ok = True)
 
-    file_w_weights, file_model = list_of_models[model_to_use]
+    file_w_weights, file_model = list_of_models[model_to_use] # modify list of models
 
     if not os.path.isfile(os.path.join(local_model_folder, file_model)):
         print("Downloading model ...")
@@ -116,4 +117,3 @@ def fetch_ablang2(model_to_use, random_init=False, device='cpu'):
     tokenizer = tokenizers.ABtokenizer()
     
     return AbLang, tokenizer, hparams
-    
