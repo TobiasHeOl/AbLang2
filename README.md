@@ -16,6 +16,8 @@
 
 **Availability and implementation:** AbLang2 is a python package available at https://github.com/oxpig/AbLang2.git.
 
+**TCRLang-Paired:** The AbLang2 architecture can be initialised with model weights trained on paired TCR sequences. This model can be used in an identical way to AbLang2 on TCR sequences. The only missing functionality is the lack of the align command. The generation of sequence and residue encodings, as well as masking are all the same. For an example please see the notebook.
+
 
 
 -----------
