@@ -11,7 +11,7 @@ with open("README.md", "r", encoding="utf-8") as f:
     
 setup(
     name='ablang2',
-    version='0.1.1',
+    version='0.2.1',
     license='BSD 3-clause license',
     description='AbLang2: An antibody-specific language model focusing on NGL prediction.',
     long_description=long_description,
