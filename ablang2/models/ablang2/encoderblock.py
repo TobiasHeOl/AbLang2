@@ -43,7 +43,7 @@ class TransformerEncoder(torch.nn.Module):
     def forward(self, hidden_embed, attn_mask=None, return_attn_weights: bool = False):
         
         residual = hidden_embed
-        hidden_embed = self.pre_attn_layer_norm(hidden_embed)
+        hidden_embed = self.pre_attn_layer_norm(hidden_embed.clone())
         hidden_embed, attn_weights = self.multihead_attention(
             hidden_embed, 
             attn_mask=attn_mask, 
