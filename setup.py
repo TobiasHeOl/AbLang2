@@ -28,5 +28,6 @@ setup(
         'einops',
         'rotary-embedding-torch',
         'numpy',
+        'pandas',
     ],
 )
